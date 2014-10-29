@@ -1,0 +1,17 @@
+{
+  "uuid": "ffabab27-d6a7-40f6-86eb-b448bd894ede",
+  "shortName": "osgrid",
+  "longName": "osgrid",
+  "companyName": "MakeAwesomeHappen",
+  "versionCode": 1,
+  "versionLabel": "1.0",
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": []
+  }
+}

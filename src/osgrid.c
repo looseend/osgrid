@@ -41,6 +41,7 @@ static bool getLocation() {
 }
 
 static void tap_received_handler(AccelAxisType axis, int32_t direction) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Tapped");
     text_layer_set_text(s_update_layer, "Updating");
     getLocation();
 }
@@ -108,7 +109,7 @@ static void update_time() {
 
 static void main_window_load(Window *window) {
     // Create time TextLayer
-    s_time_layer = text_layer_create(GRect(0, 0, 144, 50));
+    s_time_layer = text_layer_create(GRect(0, 0, 144, 45));
     text_layer_set_background_color(s_time_layer, GColorBlack);
     text_layer_set_text_color(s_time_layer, GColorWhite);
     text_layer_set_text(s_time_layer, "00:00");
@@ -121,35 +122,35 @@ static void main_window_load(Window *window) {
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_time_layer));
 
     // latitude
-    s_lat_layer = text_layer_create(GRect(0, 55, 144, 30));
+    s_lat_layer = text_layer_create(GRect(0, 45, 144, 30));
     text_layer_set_background_color(s_lat_layer, GColorWhite);
     text_layer_set_text_color(s_lat_layer, GColorBlack);
-    text_layer_set_font(s_lat_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
+    text_layer_set_font(s_lat_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
     text_layer_set_text_alignment(s_lat_layer, GTextAlignmentCenter);
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_lat_layer));
 
     // longitude
-    s_long_layer = text_layer_create(GRect(0, 87, 144, 30));
+    s_long_layer = text_layer_create(GRect(0, 74, 144, 30));
     text_layer_set_background_color(s_long_layer, GColorWhite);
     text_layer_set_text_color(s_long_layer, GColorBlack);
-    text_layer_set_font(s_long_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
+    text_layer_set_font(s_long_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
     text_layer_set_text_alignment(s_long_layer, GTextAlignmentCenter);
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_long_layer));
 
     // grid
-    s_grid_layer = text_layer_create(GRect(0, 119, 144, 30));
+    s_grid_layer = text_layer_create(GRect(0, 105, 144, 30));
     text_layer_set_background_color(s_grid_layer, GColorWhite);
     text_layer_set_text_color(s_grid_layer, GColorBlack);
-    text_layer_set_font(s_grid_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
+    text_layer_set_font(s_grid_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
     text_layer_set_text_alignment(s_grid_layer, GTextAlignmentCenter);
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_grid_layer));
     text_layer_set_text(s_grid_layer, "Tap to Update");
 
     // grid
-    s_update_layer = text_layer_create(GRect(0, 151, 144, 17));
+    s_update_layer = text_layer_create(GRect(0, 135, 144, 30));
     text_layer_set_background_color(s_update_layer, GColorWhite);
     text_layer_set_text_color(s_update_layer, GColorBlack);
-    text_layer_set_font(s_update_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_font(s_update_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
     text_layer_set_text_alignment(s_update_layer, GTextAlignmentCenter);
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_update_layer));
 

@@ -737,7 +737,7 @@ function getLocation() {
         "latitude": "Error: " + error.message,
         "longitude": "Error: " + error.message});
     },
-    {maximumAge: 600000});
+    {maximumAge: 0, update: true});
 }
 
 // Set callback for the app ready event

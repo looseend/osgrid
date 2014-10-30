@@ -10,9 +10,12 @@ static TextLayer *s_update_layer;
 static char longitude[15];
 static char latitude[15];
 static char gridRef[15];
+static char error[15];
 static bool dataInit;
 static bool wasFirstMsg;
 static char updateTime[] = "00:00:00";
+
+static bool messageProcessing;
 
 enum {
     UPDATE_LOCATION = 0x0,
@@ -20,8 +23,13 @@ enum {
 
 static bool getLocation() {
     if (! dataInit) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Not getting location, not been initted");
+        return false;
+    } else if (messageProcessing) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Not getting location, message already processing");
         return false;
     }
+    
     APP_LOG(APP_LOG_LEVEL_DEBUG, "getLocation");
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
@@ -35,6 +43,7 @@ static bool getLocation() {
     dict_write_end(iter);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "sendMessage");
 
+    messageProcessing = true;
     app_message_outbox_send();
     APP_LOG(APP_LOG_LEVEL_DEBUG, "sent!");
     return true;
@@ -50,21 +59,37 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     Tuple *latitude_tpl = dict_find(iter, 2);
     Tuple *longitude_tpl = dict_find(iter, 1);
     Tuple *grid_tpl = dict_find(iter, 3);
+    Tuple *error_tpl = dict_find(iter, 4);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "gotMessage");
-
-    if (latitude_tpl && longitude_tpl && grid_tpl) {
+    
+    // set to true regardless of result, it just means JS is awake
+    dataInit = true;
+    messageProcessing = false;
+    if (error_tpl) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Error");
+        char *e = error_tpl->value->cstring;
+        strncpy(error, e, 15);
+        text_layer_set_text(s_lat_layer, error);
+        if (sizeof(e) > 15) {
+            *e += 15;
+            strncpy(error, e, 15);
+            text_layer_set_text(s_long_layer, error);
+        }
+        
+    } else if (latitude_tpl && longitude_tpl && grid_tpl) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "OK");
         strncpy(longitude, longitude_tpl->value->cstring, 15);
         text_layer_set_text(s_long_layer, longitude);
         strncpy(latitude, latitude_tpl->value->cstring, 15);
         text_layer_set_text(s_lat_layer, latitude);
         strncpy(gridRef, grid_tpl->value->cstring, 15);
         text_layer_set_text(s_grid_layer, gridRef);
-        dataInit = true;
         
         time_t temp = time(NULL); 
         struct tm *tick_time = localtime(&temp);
         strftime(updateTime, sizeof("00:00:00"), "%H:%M:%S", tick_time);
         text_layer_set_text(s_update_layer, updateTime);
+        light_enable_interaction();
     } else {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Failed");
         //APP_LOG(APP_LOG_LEVEL_DEBUG, dict_read_first(iter)->value->cstring);
@@ -73,6 +98,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 
 static void in_dropped_handler(AppMessageResult reason, void *context) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Dropped!");
+    messageProcessing = false;
 }
 
 static void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
@@ -83,6 +109,7 @@ static void out_failed_handler(DictionaryIterator *failed, AppMessageResult reas
         APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Failed to Send!");
     }
     wasFirstMsg = false;
+    messageProcessing  = false;
 }
 
 static void update_time() {
@@ -109,20 +136,20 @@ static void update_time() {
 
 static void main_window_load(Window *window) {
     // Create time TextLayer
-    s_time_layer = text_layer_create(GRect(0, 0, 144, 45));
+    s_time_layer = text_layer_create(GRect(0, 0, 144, 47));
     text_layer_set_background_color(s_time_layer, GColorBlack);
     text_layer_set_text_color(s_time_layer, GColorWhite);
     text_layer_set_text(s_time_layer, "00:00");
 
     // Improve the layout to be more like a watchface
-    text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
+    text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
 
     // Add it as a child layer to the Window's root layer
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_time_layer));
 
     // latitude
-    s_lat_layer = text_layer_create(GRect(0, 45, 144, 30));
+    s_lat_layer = text_layer_create(GRect(0, 50, 144, 28));
     text_layer_set_background_color(s_lat_layer, GColorWhite);
     text_layer_set_text_color(s_lat_layer, GColorBlack);
     text_layer_set_font(s_lat_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
@@ -130,7 +157,7 @@ static void main_window_load(Window *window) {
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_lat_layer));
 
     // longitude
-    s_long_layer = text_layer_create(GRect(0, 74, 144, 30));
+    s_long_layer = text_layer_create(GRect(0, 74, 144, 28));
     text_layer_set_background_color(s_long_layer, GColorWhite);
     text_layer_set_text_color(s_long_layer, GColorBlack);
     text_layer_set_font(s_long_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
@@ -156,6 +183,7 @@ static void main_window_load(Window *window) {
 
     wasFirstMsg = true;
     dataInit = false;
+    messageProcessing = false;
     // Make sure the time is displayed from the start
     update_time();
 }

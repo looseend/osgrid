@@ -12,7 +12,8 @@
     "location": 0,
     "longitude": 1,
     "latitude": 2,
-    "gridRef": 3
+    "gridRef": 3,
+    "error": 4
   },
   "resources": {
     "media": []

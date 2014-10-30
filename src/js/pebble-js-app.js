@@ -724,20 +724,21 @@ function getLocation() {
       
       //convert to OSGB
       osgb=wgs84.getOSGB();
-      
+
       console.log("Hello: " + position.coords.latitude + "," + position.coords.longitude + " : " + osgb.getGridRef(4));
+      
       Pebble.sendAppMessage({
         "latitude": "" + position.coords.latitude,
         "longitude": "" + position.coords.longitude,
         "gridRef": osgb.getGridRef(4) });
     },
     function(error) {
-      console.log(error.message);
+      console.log("Error: " + error.message);
       Pebble.sendAppMessage({
-        "latitude": "Error: " + error.message,
-        "longitude": "Error: " + error.message});
+        "error":  "" + error.message});
     },
-    {maximumAge: 0, update: true});
+    {maximumAge: 0, timeout: 30000, update: true});
+  console.log("Requested location");
 }
 
 // Set callback for the app ready event

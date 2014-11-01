@@ -6,14 +6,15 @@
   "versionCode": 1,
   "versionLabel": "1.0",
   "watchapp": {
-    "watchface": true
+    "watchface": false
   },
   "appKeys": {
     "location": 0,
     "longitude": 1,
     "latitude": 2,
     "gridRef": 3,
-    "error": 4
+    "error": 4,
+    "init": 5
   },
   "resources": {
     "media": []

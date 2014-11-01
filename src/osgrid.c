@@ -46,16 +46,32 @@ static bool getLocation() {
     messageProcessing = true;
     app_message_outbox_send();
     APP_LOG(APP_LOG_LEVEL_DEBUG, "sent!");
+    text_layer_set_text(s_update_layer, "Updating");
     return true;
+}
+
+static void select_button_clicked(ClickRecognizerRef recognizer, void *context) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Clicked");
+    getLocation();
+}
+
+static void click_config_provider(void *context) {
+    window_single_click_subscribe(BUTTON_ID_SELECT, select_button_clicked);
 }
 
 static void tap_received_handler(AccelAxisType axis, int32_t direction) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Tapped");
-    text_layer_set_text(s_update_layer, "Updating");
     getLocation();
 }
 
 static void in_received_handler(DictionaryIterator *iter, void *context) {
+    Tuple *init_tpl = dict_find(iter, 5);
+    if (init_tpl) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "received init");
+        dataInit = true;
+        return;
+    }
+
     Tuple *latitude_tpl = dict_find(iter, 2);
     Tuple *longitude_tpl = dict_find(iter, 1);
     Tuple *grid_tpl = dict_find(iter, 3);
@@ -171,7 +187,7 @@ static void main_window_load(Window *window) {
     text_layer_set_font(s_grid_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
     text_layer_set_text_alignment(s_grid_layer, GTextAlignmentCenter);
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_grid_layer));
-    text_layer_set_text(s_grid_layer, "Tap to Update");
+    text_layer_set_text(s_grid_layer, "Click to Update");
 
     // grid
     s_update_layer = text_layer_create(GRect(0, 135, 144, 30));
@@ -208,12 +224,13 @@ static void init() {
     app_message_register_outbox_failed(out_failed_handler);
     app_message_open(64, 64);
 
-    accel_tap_service_subscribe(tap_received_handler);
+    // Not using shake for now
+    // accel_tap_service_subscribe(tap_received_handler);
   
-
-
     // Create main Window element and assign to pointer
     s_main_window = window_create();
+
+    window_set_click_config_provider(s_main_window, click_config_provider);
 
     // Set handlers to manage the elements inside the Window
     window_set_window_handlers(s_main_window, (WindowHandlers) {
@@ -221,6 +238,9 @@ static void init() {
                 .unload = main_window_unload
                 });
 
+    // set window full screen
+    window_set_fullscreen(s_main_window, true);
+    
     // Show the Window on the watch, with animated=true
     window_stack_push(s_main_window, true);
     // Register with TickTimerService

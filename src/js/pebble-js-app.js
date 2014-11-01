@@ -745,7 +745,8 @@ function getLocation() {
 Pebble.addEventListener("ready",
                         function(e) {
                           console.log("connect! " + e.ready);
-                          getLocation();
+                          Pebble.sendAppMessage({
+                            "init":  "true"});
                         });
 
 Pebble.addEventListener("appmessage",

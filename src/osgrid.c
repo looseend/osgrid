@@ -3,12 +3,14 @@
 static Window *s_main_window;
 static TextLayer *s_time_layer;
 
-static TextLayer *s_lat_layer;
-static TextLayer *s_long_layer;
+// static TextLayer *s_lat_layer;
+// static TextLayer *s_long_layer;
+static TextLayer *s_acc_layer;
 static TextLayer *s_grid_layer;
 static TextLayer *s_update_layer;
-static char longitude[15];
-static char latitude[15];
+// static char longitude[15];
+// static char latitude[15];
+static char accuracy[15];
 static char gridRef[15];
 static char error[15];
 static bool dataInit;
@@ -69,13 +71,15 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     if (init_tpl) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "received init");
         dataInit = true;
+        text_layer_set_text(s_update_layer, "Ready");
         return;
     }
 
-    Tuple *latitude_tpl = dict_find(iter, 2);
-    Tuple *longitude_tpl = dict_find(iter, 1);
+    // Tuple *latitude_tpl = dict_find(iter, 2);
+    // Tuple *longitude_tpl = dict_find(iter, 1);
     Tuple *grid_tpl = dict_find(iter, 3);
     Tuple *error_tpl = dict_find(iter, 4);
+    Tuple *acc_tpl = dict_find(iter, 6);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "gotMessage");
     
     // set to true regardless of result, it just means JS is awake
@@ -85,19 +89,14 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Error");
         char *e = error_tpl->value->cstring;
         strncpy(error, e, 15);
-        text_layer_set_text(s_lat_layer, error);
-        if (sizeof(e) > 15) {
-            *e += 15;
-            strncpy(error, e, 15);
-            text_layer_set_text(s_long_layer, error);
-        }
+        text_layer_set_text(s_acc_layer, error);
         
-    } else if (latitude_tpl && longitude_tpl && grid_tpl) {
+    } else if (acc_tpl && grid_tpl) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "OK");
-        strncpy(longitude, longitude_tpl->value->cstring, 15);
-        text_layer_set_text(s_long_layer, longitude);
-        strncpy(latitude, latitude_tpl->value->cstring, 15);
-        text_layer_set_text(s_lat_layer, latitude);
+
+        snprintf(accuracy, 15, "Accuracy %sm", acc_tpl->value->cstring);
+        text_layer_set_text(s_acc_layer, accuracy);
+
         strncpy(gridRef, grid_tpl->value->cstring, 15);
         text_layer_set_text(s_grid_layer, gridRef);
         
@@ -164,24 +163,8 @@ static void main_window_load(Window *window) {
     // Add it as a child layer to the Window's root layer
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_time_layer));
 
-    // latitude
-    s_lat_layer = text_layer_create(GRect(0, 50, 144, 28));
-    text_layer_set_background_color(s_lat_layer, GColorWhite);
-    text_layer_set_text_color(s_lat_layer, GColorBlack);
-    text_layer_set_font(s_lat_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-    text_layer_set_text_alignment(s_lat_layer, GTextAlignmentCenter);
-    layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_lat_layer));
-
-    // longitude
-    s_long_layer = text_layer_create(GRect(0, 74, 144, 28));
-    text_layer_set_background_color(s_long_layer, GColorWhite);
-    text_layer_set_text_color(s_long_layer, GColorBlack);
-    text_layer_set_font(s_long_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-    text_layer_set_text_alignment(s_long_layer, GTextAlignmentCenter);
-    layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_long_layer));
-
     // grid
-    s_grid_layer = text_layer_create(GRect(0, 105, 144, 30));
+    s_grid_layer = text_layer_create(GRect(0, 62, 144, 42));
     text_layer_set_background_color(s_grid_layer, GColorWhite);
     text_layer_set_text_color(s_grid_layer, GColorBlack);
     text_layer_set_font(s_grid_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
@@ -189,13 +172,22 @@ static void main_window_load(Window *window) {
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_grid_layer));
     text_layer_set_text(s_grid_layer, "Click to Update");
 
-    // grid
+    // Accuracy
+    s_acc_layer = text_layer_create(GRect(0, 110, 144, 28));
+    text_layer_set_background_color(s_acc_layer, GColorWhite);
+    text_layer_set_text_color(s_acc_layer, GColorBlack);
+    text_layer_set_font(s_acc_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+    text_layer_set_text_alignment(s_acc_layer, GTextAlignmentCenter);
+    layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_acc_layer));
+    
+    // updated
     s_update_layer = text_layer_create(GRect(0, 135, 144, 30));
     text_layer_set_background_color(s_update_layer, GColorWhite);
     text_layer_set_text_color(s_update_layer, GColorBlack);
-    text_layer_set_font(s_update_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+    text_layer_set_font(s_update_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
     text_layer_set_text_alignment(s_update_layer, GTextAlignmentCenter);
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_update_layer));
+    text_layer_set_text(s_update_layer, "Connecting");
 
     wasFirstMsg = true;
     dataInit = false;
@@ -207,8 +199,9 @@ static void main_window_load(Window *window) {
 static void main_window_unload(Window *window) {
     // Destroy TextLayer
     text_layer_destroy(s_time_layer);
-    text_layer_destroy(s_long_layer);
-    text_layer_destroy(s_lat_layer);
+    //    text_layer_destroy(s_long_layer);
+    // text_layer_destroy(s_lat_layer);
+    text_layer_destroy(s_acc_layer);
     text_layer_destroy(s_grid_layer);
     text_layer_destroy(s_update_layer);
 }

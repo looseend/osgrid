@@ -14,7 +14,8 @@
     "latitude": 2,
     "gridRef": 3,
     "error": 4,
-    "init": 5
+    "init": 5,
+    "accuracy": 6
   },
   "resources": {
     "media": []

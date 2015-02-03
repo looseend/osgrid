@@ -736,7 +736,7 @@ function getLocation() {
       Pebble.sendAppMessage({
         "error":  "" + error.message});
     },
-    {maximumAge: 0, timeout: 30000, update: true, enableHighAccuracy: true});
+    {maximumAge: 10000, timeout: 30000, update: true, enableHighAccuracy: true});
 }
 
 // Set callback for the app ready event

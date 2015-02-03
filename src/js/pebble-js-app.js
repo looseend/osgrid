@@ -732,24 +732,21 @@ function getLocation() {
         "accuracy": "" + position.coords.accuracy});
     },
     function(error) {
-      console.log("Error: " + error.message);
+      // console.log("Error: " + error.message);
       Pebble.sendAppMessage({
         "error":  "" + error.message});
     },
     {maximumAge: 0, timeout: 30000, update: true, enableHighAccuracy: true});
-  console.log("Requested location");
 }
 
 // Set callback for the app ready event
 Pebble.addEventListener("ready",
       function(e) {
-        console.log("connect! " + e.ready);
         Pebble.sendAppMessage({
           "init":  "true"});
       });
 
 Pebble.addEventListener("appmessage",
       function(e) {
-        console.log("Message: " + e.payload.location);
         getLocation();
       });

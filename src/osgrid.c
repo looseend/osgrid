@@ -19,6 +19,8 @@ static char updateTime[] = "00:00:00";
 
 static bool messageProcessing;
 
+static uint8_t dictBuf[512];
+
 enum {
     UPDATE_LOCATION = 0x0,
 };
@@ -40,7 +42,7 @@ static bool getLocation() {
         return false;
     }
     APP_LOG(APP_LOG_LEVEL_DEBUG, "make tuple");
-    
+    dict_write_begin(iter, dictBuf, 512);
     dict_write_cstring(iter, UPDATE_LOCATION, "location");
     dict_write_end(iter);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "sendMessage");
@@ -112,7 +114,23 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 }
 
 static void in_dropped_handler(AppMessageResult reason, void *context) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Dropped!");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Dropped ");
+    switch (reason) {
+    case APP_MSG_OK : APP_LOG(APP_LOG_LEVEL_DEBUG, "OK"); break;
+    case APP_MSG_SEND_TIMEOUT : APP_LOG(APP_LOG_LEVEL_DEBUG, "Timeout"); break;
+    case APP_MSG_SEND_REJECTED : APP_LOG(APP_LOG_LEVEL_DEBUG, "rejected"); break;
+    case APP_MSG_NOT_CONNECTED : APP_LOG(APP_LOG_LEVEL_DEBUG, "not connected"); break;
+    case APP_MSG_APP_NOT_RUNNING : APP_LOG(APP_LOG_LEVEL_DEBUG, "not running"); break;
+    case APP_MSG_INVALID_ARGS : APP_LOG(APP_LOG_LEVEL_DEBUG, "invalid args"); break;
+    case APP_MSG_BUSY : APP_LOG(APP_LOG_LEVEL_DEBUG, "busy"); break;
+    case APP_MSG_BUFFER_OVERFLOW : APP_LOG(APP_LOG_LEVEL_DEBUG, "overflow"); break;
+    case APP_MSG_ALREADY_RELEASED : APP_LOG(APP_LOG_LEVEL_DEBUG, "released"); break;
+    case APP_MSG_CALLBACK_ALREADY_REGISTERED : APP_LOG(APP_LOG_LEVEL_DEBUG, "already registered"); break;
+    case APP_MSG_CALLBACK_NOT_REGISTERED : APP_LOG(APP_LOG_LEVEL_DEBUG, "not registered"); break;
+    case APP_MSG_OUT_OF_MEMORY : APP_LOG(APP_LOG_LEVEL_DEBUG, "out of memoery"); break;
+    case APP_MSG_CLOSED : APP_LOG(APP_LOG_LEVEL_DEBUG, "closed"); break;
+    case APP_MSG_INTERNAL_ERROR : APP_LOG(APP_LOG_LEVEL_DEBUG, "internal"); break;
+    }
     messageProcessing = false;
 }
 
@@ -215,7 +233,7 @@ static void init() {
     app_message_register_inbox_received(in_received_handler);
     app_message_register_inbox_dropped(in_dropped_handler);
     app_message_register_outbox_failed(out_failed_handler);
-    app_message_open(64, 64);
+    app_message_open(128, 64);
 
     // Not using shake for now
     // accel_tap_service_subscribe(tap_received_handler);

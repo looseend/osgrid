@@ -725,19 +725,20 @@ function getLocation() {
       //convert to OSGB
       osgb=wgs84.getOSGB();
 
-      console.log("Hello: " + position.coords.latitude + "," + position.coords.longitude + " : " + osgb.getGridRef(4));
+      console.log("Hello: " + position.coords.latitude + "," + position.coords.longitude + " : " + osgb.getGridRef(4) + " :: " + position.coords.accuracy);
       
       Pebble.sendAppMessage({
         "latitude": "" + position.coords.latitude,
         "longitude": "" + position.coords.longitude,
-        "gridRef": osgb.getGridRef(4) });
+        "gridRef": osgb.getGridRef(4),
+        "accuracy": "" + position.coords.accuracy});
     },
     function(error) {
       console.log("Error: " + error.message);
       Pebble.sendAppMessage({
         "error":  "" + error.message});
     },
-    {maximumAge: 0, timeout: 30000, update: true});
+    {maximumAge: 0, timeout: 30000, update: true, enableHighAccuracy: true});
   console.log("Requested location");
 }
 
@@ -745,7 +746,8 @@ function getLocation() {
 Pebble.addEventListener("ready",
                         function(e) {
                           console.log("connect! " + e.ready);
-                          getLocation();
+                          Pebble.sendAppMessage({
+                            "init":  "true"});
                         });
 
 Pebble.addEventListener("appmessage",

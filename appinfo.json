@@ -3,8 +3,8 @@
   "shortName": "osgrid",
   "longName": "osgrid",
   "companyName": "Looseend.org",
-  "versionCode": 1,
-  "versionLabel": "1.0",
+  "versionCode": 2,
+  "versionLabel": "1.02",
   "watchapp": {
     "watchface": false
   },

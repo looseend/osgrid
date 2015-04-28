@@ -170,7 +170,11 @@ static void update_time() {
 static void main_window_load(Window *window) {
     // Create time TextLayer
     s_time_layer = text_layer_create(GRect(0, 0, 144, 47));
+#ifdef PBL_COLOR
+    text_layer_set_background_color(s_time_layer, GColorDarkGreen);
+#else
     text_layer_set_background_color(s_time_layer, GColorBlack);
+#endif
     text_layer_set_text_color(s_time_layer, GColorWhite);
     text_layer_set_text(s_time_layer, "00:00");
 

@@ -254,9 +254,11 @@ static void init() {
                 });
 
     // set window full screen
+
 #ifdef PBL_PLATFORM_APLITE
     window_set_fullscreen(s_main_window, true);
 #endif
+
     // Show the Window on the watch, with animated=true
     window_stack_push(s_main_window, true);
     // Register with TickTimerService
